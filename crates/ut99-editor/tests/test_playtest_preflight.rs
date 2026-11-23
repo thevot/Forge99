@@ -23,8 +23,14 @@ impl Game {
                 .arg("--edition=2021").arg(&source).arg("-o").arg(&executable).output().unwrap();
             assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
         } else {
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::PermissionsExt;
+                std::fs::write(&executable, b"#!/nonexistent/forge99-missing-interpreter\n").unwrap();
+                std::fs::set_permissions(&executable, std::fs::Permissions::from_mode(0o755)).unwrap();
+            }
+            #[cfg(not(unix))]
             std::fs::write(&executable, b"invalid executable").unwrap();
-            #[cfg(unix)] { use std::os::unix::fs::PermissionsExt; std::fs::set_permissions(&executable, std::fs::Permissions::from_mode(0o755)).unwrap(); }
         }
         Self { dir, executable }
     }
@@ -121,7 +127,11 @@ fn root_folder_launch_preserves_absolute_map_url_options_and_quoted_flags() {
     state.launch_saved_map_in_ut99(&saved).unwrap();
     let capture = game.read_capture();
     let lines: Vec<_> = capture.lines().collect();
-    assert_eq!(lines[0], format!("cwd={}", game.executable.parent().unwrap().display()));
+    let actual_cwd = lines[0].strip_prefix("cwd=").expect("cwd line");
+    assert_eq!(
+        std::fs::canonicalize(actual_cwd).unwrap(),
+        std::fs::canonicalize(game.executable.parent().unwrap()).unwrap()
+    );
     assert_eq!(lines[1], format!("{}?game=Botpack.CTFGame?mutator=Botpack.InstaGibDM", saved.display()));
     assert!(lines.contains(&"-windowed"));
     assert!(lines.contains(&r"-ini=C:\Games Folder\UT.ini"));

@@ -2103,9 +2103,16 @@ impl EditorState {
 /// 2. Strips the Win32 verbatim namespaces (`\\?\` and `\\?\UNC\`) which Windows Explorer (`explorer.exe`) rejects.
 /// 3. Normalizes forward slashes `/` to Windows backslashes `\`.
 pub fn normalize_path_for_windows_explorer(path: &Path) -> (PathBuf, String) {
+    let raw_str = path.to_string_lossy();
+    let is_windows_absolute = raw_str.starts_with(r"\\?\")
+        || raw_str.starts_with(r"\\")
+        || (raw_str.len() >= 3
+            && raw_str.as_bytes()[0].is_ascii_alphabetic()
+            && raw_str.as_bytes()[1] == b':'
+            && matches!(raw_str.as_bytes()[2], b'\\' | b'/'));
     let abs_path = if let Ok(canon) = path.canonicalize() {
         canon
-    } else if path.is_absolute() {
+    } else if path.is_absolute() || is_windows_absolute {
         path.to_path_buf()
     } else if let Ok(curr) = std::env::current_dir() {
         curr.join(path)
