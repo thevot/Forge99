@@ -1,0 +1,21 @@
+[package]
+name = "ut99-bsp"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "CSG booleans, BSP tree builder, polygon clipping, and brush generation for Unreal Tournament 99"
+
+[dependencies]
+ut99-format = { path = "../ut99-format" }
+glam.workspace = true
+bytemuck.workspace = true
+thiserror.workspace = true
+anyhow.workspace = true
+tracing.workspace = true
+rayon.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+image.workspace = true
+

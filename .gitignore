@@ -1,0 +1,14 @@
+/target/
+/dist/
+**/*.rs.bk
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+*.log
+*.pdb
+*.bak
+*.unr
+*.unr.bak
+*.t3d
+*_prefs.json

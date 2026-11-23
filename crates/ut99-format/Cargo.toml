@@ -1,0 +1,21 @@
+[package]
+name = "ut99-format"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Parser and serializer for Unreal Tournament 99 package format (.unr, .u, .utx) and Text 3D (.t3d)"
+
+[dependencies]
+anyhow.workspace = true
+thiserror.workspace = true
+byteorder.workspace = true
+glam.workspace = true
+tracing.workspace = true
+bytemuck.workspace = true
+serde.workspace = true
+flate2.workspace = true
+
+[dev-dependencies]
+tracing-subscriber.workspace = true
