@@ -536,56 +536,58 @@ fn test_wizard_all_40_predefined_layouts_and_random_names_zero_errors() {
 
 #[test]
 fn test_wizard_one_click_full_randomizer_zero_errors() {
-    let mut state = EditorState::default();
-    let mut generated_names = std::collections::HashSet::new();
+    ut99_bsp::with_deterministic_wizard_entropy(0x464F_5247_4539_3901, || {
+        let mut state = EditorState::default();
+        let mut generated_names = std::collections::HashSet::new();
 
-    for iter in 0..24 {
-        state.map_wizard_lock_game_mode = iter >= 18;
-        if state.map_wizard_lock_game_mode {
-            state.map_wizard_config.game_mode = WizardGameMode::CaptureTheFlag;
-        }
+        for iter in 0..24 {
+            state.map_wizard_lock_game_mode = iter >= 18;
+            if state.map_wizard_lock_game_mode {
+                state.map_wizard_config.game_mode = WizardGameMode::CaptureTheFlag;
+            }
 
-        state.randomize_all_wizard_settings();
-        if state.map_wizard_lock_game_mode {
-            assert_eq!(
+            state.randomize_all_wizard_settings();
+            if state.map_wizard_lock_game_mode {
+                assert_eq!(
+                    state.map_wizard_config.game_mode,
+                    WizardGameMode::CaptureTheFlag
+                );
+            }
+            generated_names.insert(state.map_wizard_config.map_name.clone());
+
+            let (b_cnt, _m_cnt, a_cnt) = state.generate_map_from_wizard();
+            assert!(
+                b_cnt >= 3 && a_cnt >= 10,
+                "Randomized map #{} ({}) produced too few brushes ({b_cnt}) or actors ({a_cnt})",
+                iter,
+                state.map_wizard_config.map_name
+            );
+
+            let errors: Vec<_> = state
+                .map_audit_issues
+                .iter()
+                .filter(|i| i.severity == IssueSeverity::Error)
+                .collect();
+            assert!(
+                errors.is_empty(),
+                "One-click randomized map #{} ({}, mode={:?}, strategy={:?}, arch={:?}) produced LevelDoctor errors: {:?}
+config: {}",
+                iter,
+                state.map_wizard_config.map_name,
                 state.map_wizard_config.game_mode,
-                WizardGameMode::CaptureTheFlag
+                state.map_wizard_config.layout_strategy,
+                state.map_wizard_config.archetype,
+                errors,
+                serde_json::to_string(&state.map_wizard_config).unwrap_or_default()
             );
         }
-        generated_names.insert(state.map_wizard_config.map_name.clone());
 
-        let (b_cnt, _m_cnt, a_cnt) = state.generate_map_from_wizard();
         assert!(
-            b_cnt >= 3 && a_cnt >= 10,
-            "Randomized map #{} ({}) produced too few brushes ({b_cnt}) or actors ({a_cnt})",
-            iter,
-            state.map_wizard_config.map_name
+            generated_names.len() >= 22,
+            "Expected >= 22 unique map names across 24 one-click random rolls, got {}",
+            generated_names.len()
         );
-
-        let errors: Vec<_> = state
-            .map_audit_issues
-            .iter()
-            .filter(|i| i.severity == IssueSeverity::Error)
-            .collect();
-        assert!(
-            errors.is_empty(),
-            "One-click randomized map #{} ({}, mode={:?}, strategy={:?}, arch={:?}) produced LevelDoctor errors: {:?}
-config: {}",
-            iter,
-            state.map_wizard_config.map_name,
-            state.map_wizard_config.game_mode,
-            state.map_wizard_config.layout_strategy,
-            state.map_wizard_config.archetype,
-            errors,
-            serde_json::to_string(&state.map_wizard_config).unwrap_or_default()
-        );
-    }
-
-    assert!(
-        generated_names.len() >= 22,
-        "Expected >= 22 unique map names across 24 one-click random rolls, got {}",
-        generated_names.len()
-    );
+    });
 }
 
 #[test]

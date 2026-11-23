@@ -1518,9 +1518,44 @@ pub struct WizardMapIdentity {
 static WIZARD_ENTROPY_COUNTER: std::sync::atomic::AtomicU64 =
     std::sync::atomic::AtomicU64::new(0x9E37_79B9_7F4A_7C15);
 
+thread_local! {
+    static WIZARD_DETERMINISTIC_SEED: std::cell::Cell<Option<u64>> =
+        const { std::cell::Cell::new(None) };
+}
+
+/// Runs `f` with a deterministic thread-local entropy stream for `next_wizard_entropy_seed()`.
+/// Restores the previous thread-local seed state on return or unwind.
+pub fn with_deterministic_wizard_entropy<R>(seed: u64, f: impl FnOnce() -> R) -> R {
+    struct ResetGuard(Option<u64>);
+    impl Drop for ResetGuard {
+        fn drop(&mut self) {
+            WIZARD_DETERMINISTIC_SEED.with(|cell| cell.set(self.0));
+        }
+    }
+
+    let previous = WIZARD_DETERMINISTIC_SEED.with(|cell| {
+        let prev = cell.get();
+        cell.set(Some(seed));
+        prev
+    });
+    let _guard = ResetGuard(previous);
+    f()
+}
+
 /// Produces a fresh, non-repeating entropy seed on every invocation by mixing system clock
-/// nanoseconds with an atomic monotonic counter via SplitMix64.
+/// nanoseconds with an atomic monotonic counter via SplitMix64 (or advancing the active
+/// deterministic thread-local seed when running under `with_deterministic_wizard_entropy`).
 pub fn next_wizard_entropy_seed() -> u64 {
+    if let Some(det) = WIZARD_DETERMINISTIC_SEED.with(|cell| {
+        let cur = cell.get()?;
+        let next = cur.wrapping_add(0x9E37_79B9_7F4A_7C15);
+        cell.set(Some(next));
+        let mut rng = SplitMix64::new(next);
+        Some(rng.next_u64())
+    }) {
+        return det;
+    }
+
     let nanos = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| d.as_nanos() as u64)

@@ -352,15 +352,23 @@ fn test_windows_explorer_path_normalization() {
 
     // 1. Existing file
     let (buf, p_str) = normalize_path_for_windows_explorer(Path::new("Cargo.toml"));
-    assert!(buf.exists(), "Cargo.toml must exist");
-    assert!(buf.is_file(), "Cargo.toml must be detected as a file");
+    #[cfg(windows)]
+    {
+        assert!(buf.exists(), "Cargo.toml must exist");
+        assert!(buf.is_file(), "Cargo.toml must be detected as a file");
+    }
+    let _ = &buf;
     assert!(!p_str.starts_with(r"\\?\"), "Must strip \\?\\ Win32 prefix for explorer.exe: {p_str}");
     assert!(!p_str.contains('/'), "Must normalize all slashes to Windows backslashes: {p_str}");
 
     // 2. Existing directory
     let (dir_buf, dir_str) = normalize_path_for_windows_explorer(Path::new("src"));
-    assert!(dir_buf.exists(), "src must exist");
-    assert!(dir_buf.is_dir(), "src must be detected as a directory");
+    #[cfg(windows)]
+    {
+        assert!(dir_buf.exists(), "src must exist");
+        assert!(dir_buf.is_dir(), "src must be detected as a directory");
+    }
+    let _ = &dir_buf;
     assert!(!dir_str.starts_with(r"\\?\"), "Must strip \\?\\ Win32 prefix for explorer.exe: {dir_str}");
     assert!(!dir_str.contains('/'), "Must normalize all slashes to Windows backslashes: {dir_str}");
 
@@ -390,10 +398,14 @@ fn test_wizard_map_path_preserved_after_generation() {
     let path = state.map_path.unwrap();
     let path_str = path.to_string_lossy();
     assert!(path_str.ends_with("DM-TestExportFolderPreserve.unr"), "map_path must point to generated map: {path_str}");
+    assert_eq!(path.file_name().unwrap(), "DM-TestExportFolderPreserve.unr");
 
     let (norm_buf, norm_str) = ut99_editor::normalize_path_for_windows_explorer(&path);
     assert!(!norm_str.starts_with(r"\\?\"), "Normalized path must not contain \\?\\: {norm_str}");
     assert!(!norm_str.contains('/'), "Normalized path must not contain forward slashes: {norm_str}");
+    assert!(norm_str.ends_with(r"\DM-TestExportFolderPreserve.unr"), "Normalized path must preserve map filename: {norm_str}");
+    #[cfg(windows)]
     assert_eq!(norm_buf.file_name().unwrap(), "DM-TestExportFolderPreserve.unr");
+    let _ = &norm_buf;
 }
 

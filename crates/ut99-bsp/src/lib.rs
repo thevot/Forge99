@@ -128,7 +128,7 @@ pub use armory::{
 pub use map_wizard::{GENERATOR_VERSION_HEIGHTS, GENERATOR_VERSION_LEGACY, GENERATOR_VERSION_PORTALS, 
     audit_wizard_teleporters, auto_fix_wizard_teleporters, collect_wizard_teleporters,
     generate_random_map_identity, generate_valid_ut99_map, next_wizard_entropy_seed,
-    preview_wizard_topology, MapWizardConfig, WizardActorSpec, WizardArchetype,
+    preview_wizard_topology, with_deterministic_wizard_entropy, MapWizardConfig, WizardActorSpec, WizardArchetype,
     WizardArchetypeCategory, WizardCustomConnection, WizardCustomMarker, WizardCustomRoom,
     WizardFeatureToggles, WizardGameMode, WizardGeneratedMap, WizardLayoutStrategy,
     WizardMapIdentity, WizardMapScale, WizardMoverSpec, WizardPreviewMarker2D, WizardPreviewRoom2D,

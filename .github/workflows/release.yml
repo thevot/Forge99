@@ -38,7 +38,7 @@ jobs:
             archive_ext: tar.gz
 
           # macOS Apple Silicon (M1/M2/M3)
-          - os: macos-14
+          - os: macos-15
             target: aarch64-apple-darwin
             binary_name: forge99
             release_bin: forge99
