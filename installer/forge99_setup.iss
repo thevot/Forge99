@@ -5,7 +5,7 @@
 
 #define MyAppName "Forge99"
 #define MyAppVersion "0.25.0"
-#define MyAppPublisher "Nicola \"thevot\" Selenu & Forge99 Contributors"
+#define MyAppPublisher 'Nicola "thevot" Selenu & Forge99 Contributors'
 #define MyAppURL "https://github.com/thevot/Forge99"
 #define MyAppExeName "forge99.exe"
 
